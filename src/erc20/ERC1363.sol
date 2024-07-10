@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
-import "tests/BaseERC20.sol";
-import "tests/TokenBank.sol";
+import "src/erc20/BaseERC20.sol";
+import "src/bank/TokenBank.sol";
 
 interface TokenRecipient {
     function tokensReceived(

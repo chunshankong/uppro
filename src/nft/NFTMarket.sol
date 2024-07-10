@@ -1,7 +1,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
-import "tests/ERC721.sol";
-import "tests/BaseERC20.sol";
+import "src/nft/ERC721.sol";
+import "src/erc20/BaseERC20.sol";
 
 // list() : 实现上架功能，NFT 持有者可以设定一个价格（需要多少个 Token 购买该 NFT）并上架 NFT 到 NFT 市场。
 // buyNFT() : 实现购买 NFT 功能，用户转入所定价的 token 数量，获得对应的 NFT。

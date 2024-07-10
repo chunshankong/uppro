@@ -1,7 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract BaseERC20 {
+interface IERC20 {
+
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _value
+    ) external returns (bool success);
+
+    function transfer(address _to, uint256 _value)
+        external
+        returns (bool success);
+}
+
+contract BaseERC20 is IERC20 {
     string public name;
     string public symbol;
     uint8 public decimals;

@@ -1,6 +1,6 @@
 pragma solidity >=0.7.0 <0.9.0;
 
-contract Bank {
+contract SBank {
     address payable private manager;
     mapping(address => uint256) public balances;
     address[3] public top3;
