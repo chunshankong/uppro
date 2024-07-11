@@ -1,5 +1,5 @@
 pragma solidity >=0.7.0 <0.9.0;
-import "src/erc20/BaseERC20.sol";
+import "src/erc20/ERC1363.sol";
 
 contract TokenBank {
     mapping(address => uint256) public balances;
@@ -12,13 +12,23 @@ contract TokenBank {
 
     event EventName(uint256 top3min);
 
+    function tokensReceived(
+        address from,
+        uint256 amount,
+        bytes calldata exData
+    ) external returns (bool) {
+        record(from, amount);
+        return true;
+    }
+
     function deposit(address tokenAddress, uint256 _value) public {
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), _value);
 
         record(msg.sender, _value);
     }
-    function record(address sender, uint256 _value) internal  {
-         //记录地址余额
+
+    function record(address sender, uint256 _value) internal {
+        //记录地址余额
         uint256 blc = balances[sender];
         if (0 == blc) {
             balances[sender] = _value;
@@ -73,5 +83,4 @@ contract TokenBank {
         IERC20(tokenAddress).transfer(msg.sender, _value);
         balances[msg.sender] -= _value;
     }
-    
 }

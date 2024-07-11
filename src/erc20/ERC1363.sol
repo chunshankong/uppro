@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
 import "src/erc20/BaseERC20.sol";
-import "src/bank/TokenBank.sol";
 
 interface TokenRecipient {
     function tokensReceived(
@@ -33,13 +32,3 @@ contract ERC1363 is BaseERC20 {
     }
 }
 
-contract TokenBankCall is TokenBank, TokenRecipient {
-    function tokensReceived(
-        address from,
-        uint256 amount,
-        bytes calldata exData
-    ) external returns (bool) {
-        record(from, amount);
-        return true;
-    }
-}
