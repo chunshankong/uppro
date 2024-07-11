@@ -1,4 +1,4 @@
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.20;
 
 import {Test, console} from "forge-std/Test.sol";
 import {WBank} from "../src/WBank.sol";
@@ -42,6 +42,19 @@ contract WBankTest is Test {
         uint balance = bank.balanceOf(user);
     
         assertEq(balance, 0, "Wrong balance");
+    }
+
+      function test_DepositEvent() public {
+        address user = address(0xa3A7a52Ffd0a44Eacf276Af28657DAfB424805F1);
+
+        vm.deal(user, 6 ether);
+        vm.prank(user); 
+        uint256 amount = 2;
+
+        vm.expectEmit(true, false, false, true);
+        emit WBank.Deposit(user, amount); 
+
+        bank.depositETH{value: amount}(); 
     }
 
 }
