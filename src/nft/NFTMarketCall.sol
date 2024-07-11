@@ -6,15 +6,22 @@ import "src/erc20/ERC1363.sol";
 // list() : 实现上架功能，NFT 持有者可以设定一个价格（需要多少个 Token 购买该 NFT）并上架 NFT 到 NFT 市场。
 // buyNFT() : 实现购买 NFT 功能，用户转入所定价的 token 数量，获得对应的 NFT。
 
-contract NFTMarketCall is TokenRecipient, IERC721Receiver {
-    // 列出 NFT 的结构体，包含卖家的地址和价格
+contract NFTMarketCall is IERC1363Receiver, IERC721Receiver {
+
     struct Listing {
         address seller;
         uint256 price;
     }
 
-    // tokenId 到 Listing 结构体的映射，用于存储所有上架的 NFT
     mapping(uint256 => Listing) public listings;
+
+    IERC20 public immutable tokenContract;
+    IERC721 public immutable nftContract;
+
+    constructor(address nftAddress,address tokenAddress){
+        nftContract = IERC721(nftAddress);
+        tokenContract = IERC20(tokenAddress)  ;
+    }
 
     //收到NFT回调意味着卖家已转入合约，需要列出
     function onERC721Received(
@@ -22,9 +29,10 @@ contract NFTMarketCall is TokenRecipient, IERC721Receiver {
         address from,
         uint256 tokenId,
         bytes calldata data
-    ) external returns (bytes4) {
+    ) override  external returns (bytes4) {
         uint256 price = abi.decode(data, (uint256));
         listings[tokenId] = Listing(from, price);
+        return IERC721Receiver.onERC721Received.selector;
     }
 
     //收到代币回调意味着买家已转入合约，需要将代币转给卖家，NFT转给买家
@@ -32,8 +40,31 @@ contract NFTMarketCall is TokenRecipient, IERC721Receiver {
         address from,
         uint256 amount,
         bytes calldata exData
-    ) external returns (bool) {
-        uint256 price = abi.decode(exData, (uint256));
+    ) override external returns (bool) {
+        
+        uint256 tokenId = abi.decode(exData, (uint256));
+
+        Listing memory listing = listings[tokenId];
+
+        require(
+            amount == listing.price,
+            "price error"
+        );
+
+        tokenContract.transfer(
+            listing.seller,
+            listing.price
+        );
+
+        nftContract.safeTransferFrom(
+            address(this),
+            from,
+            tokenId
+        );
+
+        // 从 listings 映射中删除该 NFT 的信息
+        delete listings[tokenId];
+        return true;
     }
 
     function list(
@@ -79,4 +110,5 @@ contract NFTMarketCall is TokenRecipient, IERC721Receiver {
         // 从 listings 映射中删除该 NFT 的信息
         delete listings[tokenId];
     }
+    
 }
