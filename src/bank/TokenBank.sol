@@ -1,13 +1,15 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "src/erc20/ERC1363.sol";
 
-contract TokenBank {
+contract TokenBank is IERC1363Receiver{
     mapping(address => uint256) public balances;
     address[3] public top3;
     uint8 private index;
+    IERC20 public immutable tokenContract;
 
-    constructor() {
+    constructor(address tokenAddress) {
         index = 0;
+        tokenContract = IERC20(tokenAddress)  ;
     }
 
     event EventName(uint256 top3min);
@@ -17,6 +19,7 @@ contract TokenBank {
         uint256 amount,
         bytes calldata exData
     ) external returns (bool) {
+        require(msg.sender == address(tokenContract), "Invalid token contract");
         record(from, amount);
         return true;
     }

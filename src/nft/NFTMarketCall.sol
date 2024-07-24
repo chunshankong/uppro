@@ -30,6 +30,7 @@ contract NFTMarketCall is IERC1363Receiver, IERC721Receiver {
         uint256 tokenId,
         bytes calldata data
     ) override  external returns (bytes4) {
+        require(msg.sender == address(nftContract), "Invalid NFT contract");
         uint256 price = abi.decode(data, (uint256));
         listings[tokenId] = Listing(from, price);
         return IERC721Receiver.onERC721Received.selector;
@@ -42,6 +43,8 @@ contract NFTMarketCall is IERC1363Receiver, IERC721Receiver {
         bytes calldata exData
     ) override external returns (bool) {
         
+        require(msg.sender == address(tokenContract), "Invalid token contract");
+
         uint256 tokenId = abi.decode(exData, (uint256));
 
         Listing memory listing = listings[tokenId];
