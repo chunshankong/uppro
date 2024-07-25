@@ -2,16 +2,16 @@
 pragma solidity ^0.8.0;
 
 interface IERC20 {
-
     function transferFrom(
         address _from,
         address _to,
         uint256 _value
     ) external returns (bool success);
 
-    function transfer(address _to, uint256 _value)
-        external
-        returns (bool success);
+    function transfer(
+        address _to,
+        uint256 _value
+    ) external returns (bool success);
 }
 
 contract BaseERC20 is IERC20 {
@@ -45,10 +45,10 @@ contract BaseERC20 is IERC20 {
         return balances[_owner];
     }
 
-    function transfer(address _to, uint256 _value)
-        public
-        returns (bool success)
-    {
+    function transfer(
+        address _to,
+        uint256 _value
+    ) public returns (bool success) {
         // write your code here
         require(
             _value <= balances[msg.sender],
@@ -92,16 +92,60 @@ contract BaseERC20 is IERC20 {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        balances[sender] = balances[sender] - amount;
-        balances[recipient] += amount;
-
-        emit Transfer(sender, recipient, amount);
+        _update(sender, recipient, amount);
     }
 
-    function approve(address _spender, uint256 _value)
-        public
-        returns (bool success)
-    {
+    /**
+     * @dev Transfers a `value` amount of tokens from `from` to `to`, or alternatively mints (or burns) if `from`
+     * (or `to`) is the zero address. All customizations to transfers, mints, and burns should be done by overriding
+     * this function.
+     *
+     * Emits a {Transfer} event.
+     */
+    function _update(address from, address to, uint256 value) internal virtual {
+        if (from == address(0)) {
+            // Overflow check required: The rest of the code assumes that totalSupply never overflows
+            totalSupply += value;
+        } else {
+            uint256 fromBalance = balances[from];
+            if (fromBalance < value) {
+                revert("error");
+            }
+            unchecked {
+                // Overflow not possible: value <= fromBalance <= totalSupply.
+                balances[from] = fromBalance - value;
+            }
+        }
+
+        if (to == address(0)) {
+            unchecked {
+                // Overflow not possible: value <= totalSupply or value <= fromBalance <= totalSupply.
+                totalSupply -= value;
+            }
+        } else {
+            unchecked {
+                // Overflow not possible: balance + value is at most totalSupply, which we know fits into a uint256.
+                balances[to] += value;
+            }
+        }
+
+        emit Transfer(from, to, value);
+    }
+
+    function _mint(address account, uint256 value) internal {
+        if (account == address(0)) {
+            revert("ERC20InvalidReceiver");
+        }
+        _update(address(0), account, value);
+    }
+    function issuance(address account, uint256 value) public {
+        _mint(account, value);
+    }
+
+    function approve(
+        address _spender,
+        uint256 _value
+    ) public returns (bool success) {
         // write your code here
         _approve(msg.sender, _spender, _value);
 
@@ -121,11 +165,10 @@ contract BaseERC20 is IERC20 {
         emit Approval(owner, spender, amount);
     }
 
-    function allowance(address _owner, address _spender)
-        public
-        view
-        returns (uint256 remaining)
-    {
+    function allowance(
+        address _owner,
+        address _spender
+    ) public view returns (uint256 remaining) {
         // write your code here
         return allowances[_owner][_spender];
     }

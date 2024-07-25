@@ -16,41 +16,53 @@ contract NFTMarket {
     // tokenId 到 Listing 结构体的映射，用于存储所有上架的 NFT
     mapping(uint256 => Listing) public listings;
 
+    IERC20 public immutable tokenContract;
+    IERC721 public immutable nftContract;
+
+    event NFTListed(uint256 indexed tokenId, address indexed seller, uint256 price);
+    
+    event NFTBought(uint256 indexed tokenId, address indexed seller, address indexed buyer, uint256 price);
+
+
+    constructor(address nftAddress,address tokenAddress){
+        nftContract = IERC721(nftAddress);
+        tokenContract = IERC20(tokenAddress);
+    }
+
     function list(
-        address nftAddress,
         uint256 tokenId,
         uint256 price
     ) public {
         require(
-            IERC721(nftAddress).ownerOf(tokenId) == msg.sender,
+            nftContract.ownerOf(tokenId) == msg.sender,
             "Not the owner"
         );
         // 确保市场合约被授权转移该 NFT
         require(
-            IERC721(nftAddress).getApproved(tokenId) == address(this),
+            nftContract.getApproved(tokenId) == address(this),
             "NFT not approved"
         );
         listings[tokenId] = Listing(msg.sender, price);
+        emit NFTListed(tokenId, msg.sender, price);
     }
 
     function buyNFT(
-        address nftAddress,
-        address tokenAddress,
         uint256 tokenId
     ) public {
         Listing memory listing = listings[tokenId];
+        require(listing.seller != address(0), "NFT not listed");
         require(
-            IERC721(nftAddress).ownerOf(tokenId) == listing.seller,
+            nftContract.ownerOf(tokenId) == listing.seller,
             "Owner has been transferred"
         );
 
-        IERC20(tokenAddress).transferFrom(
+        tokenContract.transferFrom(
             msg.sender,
             listing.seller,
             listing.price
         );
 
-        IERC721(nftAddress).safeTransferFrom(
+        nftContract.safeTransferFrom(
             listing.seller,
             msg.sender,
             tokenId
@@ -58,6 +70,12 @@ contract NFTMarket {
 
         // 从 listings 映射中删除该 NFT 的信息
         delete listings[tokenId];
+        emit NFTBought(tokenId, listing.seller, msg.sender, listing.price);
     }
+    
+    function getListSeller(uint256 tokenId) public view returns(address){
+        return listings[tokenId].seller;
+    }
+
 }
 

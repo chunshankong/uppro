@@ -253,12 +253,13 @@ contract MyNFT is ERC721 {
         _tokenIdTracker = new Counter();
     }
 
-    function mint() external {
+    function mint() external returns (uint256) {
         string memory tokenURI = "https://amber-cautious-hyena-90.mypinata.cloud/ipfs/QmTHfLPpVSm3mtcHdkLpZiaXFor4uaDSpsWdu21e8osHWp";
         uint256 id = _tokenIdTracker.current();
         _mint(msg.sender, id);
         _setTokenURI(id, tokenURI);
-         _tokenIdTracker.increment();
+        _tokenIdTracker.increment();
+        return id;
     }
 
     function burn(uint256 id) external {
