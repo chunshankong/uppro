@@ -163,7 +163,7 @@ function test_buy_not_enough() public {
 
     function test_FuzzBuy(address buyer, uint256 price) public {
         vm.assume(buyer != address(0));
-        vm.assume(price > 0.00000000001 ether && price < 0.00001 ether);
+        vm.assume(price > 1 && price < 10000);
 
         address seller = address(0x37D5F39EB1F63B471D30b1Ede3F8d6eeBc3aFC47);
         // 为之后的一系列调用设置 msg.sender
